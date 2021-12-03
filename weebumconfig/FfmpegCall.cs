@@ -128,7 +128,7 @@ namespace weebumconfig
         {
             return "\"" + quoted + "\"";
         }
-        //Public Method Section
+        //Replaces the arg string tokens with properties in the class.
         public string GetReplacedArgString()
         {
             if (argString == null || inputPath == null || outputPath == null || ffmpegPath == null || outputName == null)
@@ -145,7 +145,7 @@ namespace weebumconfig
     /// </summary>
     public class FfmpegCall
     {
-        FfmpegData data;
+        private FfmpegData data;
         private readonly SynchronizationContext localSyncContext;
         public FfmpegCall(System.Threading.SynchronizationContext sct, FfmpegData builtData)
         {
@@ -166,7 +166,7 @@ namespace weebumconfig
             proc.Start();
             return proc;
         }
-        //function to update text box via the other thread
+        //function to update text box via the other thread, using the SynchronizationContext
         public void UpdateTextBox(string text, RichTextBox tbx)
         {
             localSyncContext.Post(delegate (object state)
