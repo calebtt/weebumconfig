@@ -13,12 +13,11 @@ namespace weebumconfig
     {
         FfmpegCall caller;
         FfmpegData data;
-        const string STATUS_BAD_EXE = "The file path you selected does not end in ffmpeg.exe!!";
-        const string STATUS_IDLE = "Idle...";
-        const string STATUS_WORKING = "Working...";
-        const string MESSAGE_GENERAL_ERROR = "Error.";
-        const string MESSAGE_OUTPUT_EXISTS = "Output file exists in directory already.";
-        const string NAME_OUTPUT_FILE = "output.webm";
+        readonly string STATUS_BAD_EXE = "The file path you selected does not end in ffmpeg.exe!!";
+        readonly string STATUS_IDLE = "Idle...";
+        readonly string STATUS_WORKING = "Working...";
+        readonly string MESSAGE_GENERAL_ERROR = "Error.";
+        readonly string MESSAGE_OUTPUT_EXISTS = "Output file exists in directory already.";
         //used for status indication
         readonly Color goodColor;
         readonly Color badColor = Color.Crimson;
@@ -38,7 +37,7 @@ namespace weebumconfig
                 }
             }
             this.openFileDialog2.InitialDirectory = SettingsFile.Default.PREVIOUS_VIDEO_FOLDER;
-            this.tbxOutputFileName.Text = NAME_OUTPUT_FILE;
+            this.tbxOutputFileName.Text = data.OutputName;
         }
         private void ValidateOutputFileNotInDirectory(string directoryPath)
         {

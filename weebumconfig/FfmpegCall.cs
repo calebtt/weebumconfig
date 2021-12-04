@@ -12,24 +12,29 @@ namespace weebumconfig
 {
     public class FfmpegData
     {
-        public const string NAME_FFMPEG = "ffmpeg.exe";
-        private const string NAME_OUTPUT_EXTENSION = ".webm";
-        private const string TOKEN_VIDEO = "$MOVIE$";
-        private const string TOKEN_OUTPUT = "$OUTPUT$";
-        private string outputName = "output.webm";
+        public readonly string NAME_FFMPEG = "ffmpeg.exe";
+        public readonly string NAME_OUTPUT_EXTENSION = ".webm";
+        public readonly string NAME_OUTPUT_DEFAULT = "output.webm";
+        public readonly string TOKEN_VIDEO = "$MOVIE$";
+        public readonly string TOKEN_OUTPUT = "$OUTPUT$";
+        public readonly string ARG_STRING_DEFAULT = "-i $MOVIE$ -c:v libvpx -crf 60 -b:v 14294k -vf scale = 640:-1 -an $OUTPUT$";
+        private string outputName;
         private string outputPath; // a directory
         private string inputPath; // a full path plus filename
         private string ffmpegPath; // a full path plus filename
-        private string argString = "-i $MOVIE$ -c:v libvpx -crf 60 -b:v 14294k -vf scale = 640:-1 -an $OUTPUT$";
+        private string argString;
+        public FfmpegData()
+        {
+            outputName = NAME_OUTPUT_DEFAULT;
+            argString = ARG_STRING_DEFAULT;
+        }
         public string OutputPath
         {
             get => outputPath;
             set
             {
                 if (CheckIfDirectoryExists(value))
-                {
                     outputPath = value;
-                }
                 else
                     throw new ArgumentException("Invalid output file path.");
             }
@@ -77,13 +82,9 @@ namespace weebumconfig
             set
             {
                 if (value.EndsWith(NAME_OUTPUT_EXTENSION) && value.Length > NAME_OUTPUT_EXTENSION.Length)
-                {
                     outputName = value;
-                }
                 else
-                {
                     throw new ArgumentException("Invalid output file name string.");
-                }
             }
         }
         //Check if file exists in directory.
