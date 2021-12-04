@@ -117,7 +117,7 @@ namespace weebumconfig
         }
         public bool IsFfmpegPath(string currentPath)
         {
-            return currentPath.EndsWith(NAME_FFMPEG);
+            return currentPath.ToLower().EndsWith(NAME_FFMPEG);
         }
         private bool IsValidTokenArgString(string currentArgs)
         {
