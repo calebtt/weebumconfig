@@ -39,13 +39,7 @@ namespace weebumconfig
             this.openFileDialog2.InitialDirectory = SettingsFile.Default.PREVIOUS_VIDEO_FOLDER;
             this.tbxOutputFileName.Text = data.OutputName;
         }
-        private void ValidateOutputFileNotInDirectory(string directoryPath)
-        {
-            if(System.IO.File.Exists(directoryPath+"\\"+data.OutputName))
-            {
-                MessageBox.Show(MESSAGE_OUTPUT_EXISTS, MESSAGE_GENERAL_ERROR);
-            }
-        }
+
         //Update status strip
         private void SetTextAndColor(string newText, bool isGood)
         {
@@ -56,15 +50,25 @@ namespace weebumconfig
         }
         private void tbxOutputFileName_TextChanged(object sender, EventArgs e)
         {
-            try
+            if (this.tbxOutputFileName.Text != null && data.OutputPath != null)
             {
-                data.OutputName = this.tbxOutputFileName.Text;
-                SetTextAndColor(STATUS_IDLE, true);
-                ValidateOutputFileNotInDirectory(data.OutputPath + "\\" + data.OutputName);
-            }
-            catch (Exception exception)
-            {
-                SetTextAndColor(exception.Message, false);
+                try
+                {
+                    if (!data.CheckIfFileExists(data.OutputPath + "\\" + this.tbxOutputFileName.Text))
+                    {
+                        data.OutputName = this.tbxOutputFileName.Text;
+                        SetTextAndColor(STATUS_IDLE, true);
+                    }
+                    else
+                    {
+                        SetTextAndColor(MESSAGE_OUTPUT_EXISTS, false);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    SetTextAndColor(MESSAGE_GENERAL_ERROR + ex.Message, false);
+                    return;
+                }
             }
         }
         private void button1_Click(object sender, EventArgs e)
@@ -82,9 +86,10 @@ namespace weebumconfig
             {
                 return;
             }
+            SetTextAndColor(STATUS_WORKING, true);
+            this.Refresh();
             try
             {
-                SetTextAndColor(STATUS_WORKING, true);
                 data.ArgString = this.rtxProgramArgs.Text;
                 data.FfmpegPath = this.tbxFfmpegPath.Text;
                 proc = caller.StartProcess();

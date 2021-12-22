@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,12 +13,13 @@ namespace weebumconfig
 {
     public class FfmpegData
     {
-        public readonly string NAME_FFMPEG = "ffmpeg.exe";
-        public readonly string NAME_OUTPUT_EXTENSION = ".webm";
-        public readonly string NAME_OUTPUT_DEFAULT = "output.webm";
-        public readonly string TOKEN_VIDEO = "$MOVIE$";
-        public readonly string TOKEN_OUTPUT = "$OUTPUT$";
-        public readonly string ARG_STRING_DEFAULT = "-i $MOVIE$ -c:v libvpx -crf 60 -b:v 14294k -vf scale = 640:-1 -an $OUTPUT$";
+        public const string NAME_FFMPEG = "ffmpeg.exe";
+        public const string NAME_OUTPUT_EXTENSION = ".webm";
+        public const string NAME_OUTPUT_DEFAULT = "output.webm";
+        public const string TOKEN_VIDEO = "$MOVIE$";
+        public const string TOKEN_OUTPUT = "$OUTPUT$";
+        public const string TOKEN_INPUT = "-i ";
+        public const string ARG_STRING_DEFAULT = "-i $MOVIE$ -c:v libvpx -crf 60 -b:v 14294k -vf scale = 640:-1 -an $OUTPUT$";
         private string outputName;
         private string outputPath; // a directory
         private string inputPath; // a full path plus filename
@@ -36,7 +38,7 @@ namespace weebumconfig
                 if (CheckIfDirectoryExists(value))
                     outputPath = value;
                 else
-                    throw new ArgumentException("Invalid output file path.");
+                    throw new ArgumentException("FfmpegData.OutputPath: Invalid output file path.");
             }
         }
         public string InputPath
@@ -81,10 +83,23 @@ namespace weebumconfig
             get => outputName;
             set
             {
+                Action<int> ThrowFunc = (nonwscount) =>
+                {
+                    if (nonwscount == 0)
+                        throw new ArgumentException("FfmpegData.OutputName: Invalid output file name string.");
+                };
                 if (value.EndsWith(NAME_OUTPUT_EXTENSION) && value.Length > NAME_OUTPUT_EXTENSION.Length)
+                {
+                    string temp = value.Substring(0, value.Length - NAME_OUTPUT_EXTENSION.Length);
+                    var ws = temp.Where((c) =>
+                    {
+                        return !Char.IsWhiteSpace(c);
+                    });
+                    ThrowFunc(ws.Count());
                     outputName = value;
+                }
                 else
-                    throw new ArgumentException("Invalid output file name string.");
+                    ThrowFunc(0);
             }
         }
         //Check if file exists in directory.
@@ -116,13 +131,18 @@ namespace weebumconfig
                 return false;
             }
         }
+        //Can throw null-ref exception if path is invalid.
+        public string GetDirectoryOfFullPath(string fullPath)
+        {
+            return System.IO.Path.GetDirectoryName(fullPath);
+        }
         public bool IsFfmpegPath(string currentPath)
         {
             return currentPath.ToLower().EndsWith(NAME_FFMPEG);
         }
         private bool IsValidTokenArgString(string currentArgs)
         {
-            return currentArgs.StartsWith("-i " + TOKEN_VIDEO) && currentArgs.EndsWith(TOKEN_OUTPUT);
+            return currentArgs.StartsWith(TOKEN_INPUT + TOKEN_VIDEO) && currentArgs.EndsWith(TOKEN_OUTPUT);
         }
         //Add double quotes to the beginning and end of a string
         private string Quotes(string quoted)
