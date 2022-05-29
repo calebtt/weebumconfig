@@ -6,6 +6,8 @@ using System.IO;
 using System.Media;
 using System.Windows.Forms;
 using System.Threading;
+using Microsoft.WindowsAPICodePack.Shell;
+using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 
 namespace weebumconfig
 {
@@ -13,11 +15,12 @@ namespace weebumconfig
     {
         FfmpegCall caller;
         FfmpegData data;
-        readonly string STATUS_BAD_EXE = "The file path you selected does not end in ffmpeg.exe!!";
+        readonly string MESSAGE_NO_FFMPEG = "The file path you selected does not end in ffmpeg.exe!!";
         readonly string STATUS_IDLE = "Idle...";
         readonly string STATUS_WORKING = "Working...";
         readonly string MESSAGE_GENERAL_ERROR = "Error.";
         readonly string MESSAGE_OUTPUT_EXISTS = "Output file exists in directory already.";
+        readonly string MESSAGE_NO_VIDEO_FOUND = "NO VIDEO FILE FOUND.";
         //used for status indication
         readonly Color goodColor;
         readonly Color badColor = Color.Crimson;
@@ -29,15 +32,19 @@ namespace weebumconfig
             data = new FfmpegData();
             caller = new FfmpegCall(SynchronizationContext.Current, data);
             goodColor = this.statusStrip1.Items[0].ForeColor;
-            if (SettingsFile.Default.PREVIOUS_FFMPEG_PATH != null)
+            string ffmpegFile = SettingsFile.Default.PREVIOUS_FFMPEG_PATH;
+            if (ffmpegFile != null)
             {
-                if (SettingsFile.Default.PREVIOUS_FFMPEG_PATH != "")
+                if (ffmpegFile != "")
                 {
-                    this.tbxFfmpegPath.Text = SettingsFile.Default.PREVIOUS_FFMPEG_PATH;
+                    this.tbxFfmpegPath.Text = ffmpegFile;
+                    this.openFileDialog1.InitialDirectory = Path.GetDirectoryName(ffmpegFile);
                 }
             }
             this.openFileDialog2.InitialDirectory = SettingsFile.Default.PREVIOUS_VIDEO_FOLDER;
             this.tbxOutputFileName.Text = data.OutputName;
+            //Init program args rtx with default arg string from ffmpegdata
+            rtxProgramArgs.Text = data.ArgString;
         }
 
         //Update status strip
@@ -71,38 +78,11 @@ namespace weebumconfig
                 }
             }
         }
-        private void button1_Click(object sender, EventArgs e)
-        {
-            this.openFileDialog1.ShowDialog(this);
-        }
         private void btnSelectVidyaLocation_Click(object sender, EventArgs e)
         {
             this.openFileDialog2.ShowDialog(this);
         }
-        //Execute button click event
-        private void button2_Click(object sender, EventArgs e)
-        {
-            if((this.tbxFfmpegPath.Text.Length==0) || (this.tbxVidyaPath.Text.Length==0))
-            {
-                return;
-            }
-            SetTextAndColor(STATUS_WORKING, true);
-            this.Refresh();
-            try
-            {
-                data.ArgString = this.rtxProgramArgs.Text;
-                data.FfmpegPath = this.tbxFfmpegPath.Text;
-                proc = caller.StartProcess();
-                this.backgroundWorker1.RunWorkerAsync();
-                this.backgroundWorker2.RunWorkerAsync();
-                this.btnExecute.Enabled = false;
-            }
-            catch (Exception ex)
-            {
-                SetTextAndColor(ex.Message, false);
-                return;
-            }
-        }
+        //Fileok event handler for choose ffmpeg.exe
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
             try
@@ -116,7 +96,7 @@ namespace weebumconfig
             catch (Exception ex)
             {
                 System.Media.SystemSounds.Hand.Play();
-                SetTextAndColor(STATUS_BAD_EXE + ex.Message, false);
+                SetTextAndColor(MESSAGE_NO_FFMPEG + ex.Message, false);
                 return;
             }
         }
@@ -139,6 +119,9 @@ namespace weebumconfig
                 
                 SettingsFile.Default.PREVIOUS_VIDEO_FOLDER = System.IO.Path.GetDirectoryName(this.openFileDialog2.FileName);
                 SettingsFile.Default.Save();
+                //Update duration box with video info (if available).
+                TimeSpan dur = GetVideoDuration(openFileDialog2.FileName);
+                tbxVideoDuration.Text = dur.ToString();
             }
             catch (Exception ex)
             {
@@ -161,12 +144,12 @@ namespace weebumconfig
             if (allText.Length > 0)
             {
                 System.Media.SystemSounds.Beep.Play();
-                caller.UpdateTextBox(allText, this.richTextBox2);
+                caller.UpdateTextBox(allText, this.rtxCallOutputBox);
             }
             else
             {
                 System.Media.SystemSounds.Exclamation.Play();
-                caller.UpdateTextBox(MESSAGE_GENERAL_ERROR, this.richTextBox2);
+                caller.UpdateTextBox(MESSAGE_GENERAL_ERROR, this.rtxCallOutputBox);
             }
         }
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -184,6 +167,60 @@ namespace weebumconfig
                 {
                     System.Diagnostics.Process.Start("explorer.exe", data.OutputPath);
                 }
+            }
+        }
+        private void btnSelectFfmpegLocation_Click(object sender, EventArgs e)
+        {
+            this.openFileDialog1.ShowDialog(this);
+        }
+        //Execute button click event
+        private void btnExecute_Click(object sender, EventArgs e)
+        {
+            if ((this.tbxFfmpegPath.Text.Length == 0) || (this.tbxVidyaPath.Text.Length == 0))
+            {
+                return;
+            }
+
+            if (!File.Exists(tbxVidyaPath.Text))
+            {
+                rtxCallOutputBox.Text = MESSAGE_NO_VIDEO_FOUND;
+                return;
+            }
+            if (!File.Exists(tbxFfmpegPath.Text))
+            {
+                rtxCallOutputBox.Text = MESSAGE_NO_FFMPEG;
+                return;
+            }
+            if (data.CheckIfFileExists(data.OutputPath + "\\" + tbxOutputFileName.Text))
+            {
+                SetTextAndColor(MESSAGE_OUTPUT_EXISTS, false);
+                return;
+            }
+            SetTextAndColor(STATUS_WORKING, true);
+            this.Refresh();
+            try
+            {
+                data.ArgString = this.rtxProgramArgs.Text;
+                data.FfmpegPath = this.tbxFfmpegPath.Text;
+                proc = caller.StartProcess();
+                this.backgroundWorker1.RunWorkerAsync();
+                this.backgroundWorker2.RunWorkerAsync();
+                this.btnExecute.Enabled = false;
+            }
+            catch (Exception ex)
+            {
+                SetTextAndColor(ex.Message, false);
+                return;
+            }
+        }
+
+        private static TimeSpan GetVideoDuration(string filePath)
+        {
+            using (var shell = ShellObject.FromParsingName(filePath))
+            {
+                IShellProperty prop = shell.Properties.System.Media.Duration;
+                var t = (ulong)prop.ValueAsObject;
+                return TimeSpan.FromTicks((long)t);
             }
         }
     }

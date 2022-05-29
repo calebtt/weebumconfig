@@ -11,6 +11,10 @@ using System.Diagnostics;
 
 namespace weebumconfig
 {
+    /// <summary>
+    /// Holds some data associated with calling FFMPEG and has some functions
+    /// to validate the data, as well as replace the special tokens ($SOMETHING$) with real values.
+    /// </summary>
     public class FfmpegData
     {
         public const string NAME_FFMPEG = "ffmpeg.exe";
@@ -18,8 +22,9 @@ namespace weebumconfig
         public const string NAME_OUTPUT_DEFAULT = "output.webm";
         public const string TOKEN_VIDEO = "$MOVIE$";
         public const string TOKEN_OUTPUT = "$OUTPUT$";
+        public const string TOKEN_TIMESPAN = "$TIMESPAN$";
         public const string TOKEN_INPUT = "-i ";
-        public const string ARG_STRING_DEFAULT = "-i $MOVIE$ -c:v libvpx -crf 60 -b:v 14294k -vf scale = 640:-1 -an $OUTPUT$";
+        public const string ARG_STRING_DEFAULT = "-i $MOVIE$ $TIMESPAN$ -c:v libvpx -crf 60 -b:v 14294k -vf scale=640:-1 -an $OUTPUT$";
         private string outputName;
         private string outputPath; // a directory
         private string inputPath; // a full path plus filename
@@ -140,6 +145,7 @@ namespace weebumconfig
         {
             return currentPath.ToLower().EndsWith(NAME_FFMPEG);
         }
+        //Checks for a couple things that might indicate it's an invalid arg string.
         private bool IsValidTokenArgString(string currentArgs)
         {
             return currentArgs.StartsWith(TOKEN_INPUT + TOKEN_VIDEO) && currentArgs.EndsWith(TOKEN_OUTPUT);
@@ -156,7 +162,10 @@ namespace weebumconfig
                 throw new ArgumentNullException("Null data member, can't get replaced arg string.");
             if (argString.Length == 0 || inputPath.Length == 0 || outputPath.Length == 0 || ffmpegPath.Length == 0 || outputName.Length == 0)
                 throw new ArgumentNullException("Empty string data member, can't get replaced arg string.");
-            string replacedArgString = argString.Replace(TOKEN_VIDEO, Quotes(inputPath)).Replace(TOKEN_OUTPUT, Quotes(outputPath + "\\" + outputName));
+            string replacedArgString = argString
+                .Replace(TOKEN_VIDEO, Quotes(inputPath))
+                .Replace(TOKEN_OUTPUT, Quotes(outputPath + "\\" + outputName))
+                .Replace(TOKEN_TIMESPAN, "");
             return replacedArgString;
         }
     }

@@ -33,6 +33,7 @@ namespace weebumconfig
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.btnSelectFfmpegLocation = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.tbxVideoDuration = new System.Windows.Forms.TextBox();
             this.btnOpenOutputFolder = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.tbxOutputFileName = new System.Windows.Forms.TextBox();
@@ -44,7 +45,7 @@ namespace weebumconfig
             this.rtxProgramArgs = new System.Windows.Forms.RichTextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.richTextBox2 = new System.Windows.Forms.RichTextBox();
+            this.rtxCallOutputBox = new System.Windows.Forms.RichTextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.openFileDialog2 = new System.Windows.Forms.OpenFileDialog();
@@ -65,7 +66,7 @@ namespace weebumconfig
             // 
             // openFileDialog1
             // 
-            this.openFileDialog1.FileName = "openFileDialog1";
+            this.openFileDialog1.FileName = "ffmpeg.exe";
             this.openFileDialog1.Filter = "FFMPEG .exe file |*.exe";
             this.openFileDialog1.ReadOnlyChecked = true;
             this.openFileDialog1.FileOk += new System.ComponentModel.CancelEventHandler(this.openFileDialog1_FileOk);
@@ -73,7 +74,6 @@ namespace weebumconfig
             // btnSelectFfmpegLocation
             // 
             this.btnSelectFfmpegLocation.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.btnSelectFfmpegLocation.Cursor = System.Windows.Forms.Cursors.Default;
             this.btnSelectFfmpegLocation.Dock = System.Windows.Forms.DockStyle.Left;
             this.btnSelectFfmpegLocation.Location = new System.Drawing.Point(0, 0);
             this.btnSelectFfmpegLocation.Name = "btnSelectFfmpegLocation";
@@ -81,10 +81,11 @@ namespace weebumconfig
             this.btnSelectFfmpegLocation.TabIndex = 2;
             this.btnSelectFfmpegLocation.Text = "Select FFMPEG location";
             this.btnSelectFfmpegLocation.UseVisualStyleBackColor = false;
-            this.btnSelectFfmpegLocation.Click += new System.EventHandler(this.button1_Click);
+            this.btnSelectFfmpegLocation.Click += new System.EventHandler(this.btnSelectFfmpegLocation_Click);
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.tbxVideoDuration);
             this.groupBox1.Controls.Add(this.btnOpenOutputFolder);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.tbxOutputFileName);
@@ -99,10 +100,17 @@ namespace weebumconfig
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "FFMPEG Setup";
             // 
+            // tbxVideoDuration
+            // 
+            this.tbxVideoDuration.Location = new System.Drawing.Point(753, 22);
+            this.tbxVideoDuration.Name = "tbxVideoDuration";
+            this.tbxVideoDuration.Size = new System.Drawing.Size(126, 23);
+            this.tbxVideoDuration.TabIndex = 8;
+            // 
             // btnOpenOutputFolder
             // 
             this.btnOpenOutputFolder.BackColor = System.Drawing.Color.GreenYellow;
-            this.btnOpenOutputFolder.Location = new System.Drawing.Point(918, 12);
+            this.btnOpenOutputFolder.Location = new System.Drawing.Point(924, 12);
             this.btnOpenOutputFolder.Name = "btnOpenOutputFolder";
             this.btnOpenOutputFolder.Size = new System.Drawing.Size(153, 34);
             this.btnOpenOutputFolder.TabIndex = 7;
@@ -113,7 +121,7 @@ namespace weebumconfig
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(666, 27);
+            this.label1.Location = new System.Drawing.Point(635, 26);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(112, 15);
             this.label1.TabIndex = 6;
@@ -123,7 +131,7 @@ namespace weebumconfig
             // 
             this.tbxOutputFileName.Location = new System.Drawing.Point(457, 23);
             this.tbxOutputFileName.Name = "tbxOutputFileName";
-            this.tbxOutputFileName.Size = new System.Drawing.Size(203, 23);
+            this.tbxOutputFileName.Size = new System.Drawing.Size(172, 23);
             this.tbxOutputFileName.TabIndex = 1;
             this.tbxOutputFileName.TextChanged += new System.EventHandler(this.tbxOutputFileName_TextChanged);
             // 
@@ -161,7 +169,6 @@ namespace weebumconfig
             // btnSelectVidyaLocation
             // 
             this.btnSelectVidyaLocation.BackColor = System.Drawing.SystemColors.Info;
-            this.btnSelectVidyaLocation.Cursor = System.Windows.Forms.Cursors.Default;
             this.btnSelectVidyaLocation.Dock = System.Windows.Forms.DockStyle.Left;
             this.btnSelectVidyaLocation.Location = new System.Drawing.Point(0, 0);
             this.btnSelectVidyaLocation.Name = "btnSelectVidyaLocation";
@@ -173,8 +180,7 @@ namespace weebumconfig
             // 
             // btnExecute
             // 
-            this.btnExecute.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.btnExecute.Cursor = System.Windows.Forms.Cursors.Default;
+            this.btnExecute.BackColor = System.Drawing.Color.IndianRed;
             this.btnExecute.Dock = System.Windows.Forms.DockStyle.Right;
             this.btnExecute.Location = new System.Drawing.Point(106, 0);
             this.btnExecute.Name = "btnExecute";
@@ -182,7 +188,7 @@ namespace weebumconfig
             this.btnExecute.TabIndex = 4;
             this.btnExecute.Text = "Execute Command";
             this.btnExecute.UseVisualStyleBackColor = false;
-            this.btnExecute.Click += new System.EventHandler(this.button2_Click);
+            this.btnExecute.Click += new System.EventHandler(this.btnExecute_Click);
             // 
             // tbxFfmpegPath
             // 
@@ -223,16 +229,17 @@ namespace weebumconfig
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(35, 17);
             this.toolStripStatusLabel1.Text = "Idle...";
             // 
-            // richTextBox2
+            // rtxCallOutputBox
             // 
-            this.richTextBox2.BackColor = System.Drawing.Color.Silver;
-            this.richTextBox2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.richTextBox2.ForeColor = System.Drawing.Color.Lime;
-            this.richTextBox2.Location = new System.Drawing.Point(0, 0);
-            this.richTextBox2.Name = "richTextBox2";
-            this.richTextBox2.Size = new System.Drawing.Size(1083, 159);
-            this.richTextBox2.TabIndex = 4;
-            this.richTextBox2.Text = "Output from FFMPEG call goes here...\n";
+            this.rtxCallOutputBox.BackColor = System.Drawing.Color.Silver;
+            this.rtxCallOutputBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rtxCallOutputBox.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.rtxCallOutputBox.ForeColor = System.Drawing.Color.ForestGreen;
+            this.rtxCallOutputBox.Location = new System.Drawing.Point(0, 0);
+            this.rtxCallOutputBox.Name = "rtxCallOutputBox";
+            this.rtxCallOutputBox.Size = new System.Drawing.Size(1083, 159);
+            this.rtxCallOutputBox.TabIndex = 4;
+            this.rtxCallOutputBox.Text = "Output from FFMPEG call goes here...\n";
             // 
             // splitContainer1
             // 
@@ -248,7 +255,7 @@ namespace weebumconfig
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.richTextBox2);
+            this.splitContainer1.Panel2.Controls.Add(this.rtxCallOutputBox);
             this.splitContainer1.Size = new System.Drawing.Size(1083, 325);
             this.splitContainer1.SplitterDistance = 162;
             this.splitContainer1.TabIndex = 5;
@@ -306,7 +313,7 @@ namespace weebumconfig
         private System.Windows.Forms.RichTextBox rtxProgramArgs;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.RichTextBox richTextBox2;
+        private System.Windows.Forms.RichTextBox rtxCallOutputBox;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.BindingSource bindingSource1;
@@ -318,6 +325,7 @@ namespace weebumconfig
         private System.Windows.Forms.TextBox tbxOutputFileName;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnOpenOutputFolder;
+        private System.Windows.Forms.TextBox tbxVideoDuration;
     }
 }
 
